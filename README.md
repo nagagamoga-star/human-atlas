@@ -28,18 +28,21 @@ Open http://localhost:3016. To build the static site, run `npm run build`; the o
 
 ```sh
 npm run check
-node scripts/validate-atlas.mjs
-node scripts/validate-interactions.mjs
+npm run lint
+npm test
 npm run build
+npm run budget
 ```
 
-Validation covers mesh buffers, names and concept membership, nonoverlapping exploded layouts at desktop and mobile aspect ratios, search and inspection contracts, and tap-versus-drag handling. Browser interaction checks have exercised selection, system controls, search, isolation, rotation, and 390×844, 320×568, and 844×390 layouts. Phone controls stay clear of the exploded inventory, and isolated structures fit the space above or beside the detail panel. Physical-device performance and real multitouch hardware have not been tested.
+`npm test` runs the atlas and interaction validators. Expected part and concept counts come from the manifest (`partCount`, `conceptCount`), not from numbers baked into the script. Validation covers mesh buffers, names and concept membership, nonoverlapping exploded layouts at desktop and mobile aspect ratios, search and inspection contracts, and tap-versus-drag handling. Browser interaction checks have exercised selection, system controls, search, isolation, rotation, and 390×844, 320×568, and 844×390 layouts. Phone controls stay clear of the exploded inventory, and isolated structures fit the space above or beside the detail panel. Physical-device performance and real multitouch hardware have not been tested.
+
+GitHub Actions runs that sequence on every push and pull request. `npm run budget` then fails the job if the gzipped model payload or the gzipped main JS bundle exceeds the ceilings in `scripts/check-payload.mjs`, and it writes the sizes to the job summary. `npm run fmt` / `npm run fmt:check` invoke oxfmt; they are not part of CI, because formatting would restyle the studio sources and the one-line anatomy manifest.
 
 ## Anatomy data
 
 The current viewer uses **BodyParts3D 4.0**, an adult male reference anatomy, licensed **CC BY 4.0**. It does not represent every human structure or variation. Individual source meshes are distinct from named concepts, which may group multiple meshes. Descriptions distinguish general system context from individual organ explanations.
 
-Geometry is simplified for browser performance while retaining every source mesh. The packaged model contains 2,288,268 triangles and downloads approximately 33 MB of compressed geometry. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
+Geometry is simplified for browser performance while retaining every source mesh. The packaged model contains 2,288,268 triangles and is published only as gzip, about 33 MB. The viewer inflates each chunk with `DecompressionStream` unless the host already decoded the response. Full credits, source links, and adaptation details are in [ATTRIBUTION.md](public/ATTRIBUTION.md).
 
 This is an educational explorer, not a diagnostic or surgical tool.
 
@@ -51,7 +54,15 @@ The optional WebMCP tools expose anatomy search and inspection in compatible bro
 
 ## Rebuilding geometry
 
-The repository includes browser-ready geometry. Rebuilding it is optional: obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, run `scripts/convert-anatomy.py`, then `node scripts/optimize-anatomy.mjs` and `node scripts/compress-models.mjs`. Simplification uses a 0.2% relative error limit per structure.
+The repository includes browser-ready geometry. Rebuilding it is optional. Obtain the official BodyParts3D OBJ archive and English metadata tables, prepare the joined concepts and display-system mappings, then:
+
+```sh
+python3 scripts/convert-anatomy.py OBJ_DIRECTORY CONCEPT_MAP SYSTEM_MAP
+node scripts/optimize-anatomy.mjs
+node scripts/compress-models.mjs
+```
+
+`convert-anatomy.py` writes uncompressed chunks and records `partCount` and `conceptCount` on the manifest. `optimize-anatomy.mjs` simplifies those chunks. `compress-models.mjs` gzip-compresses each one, points `chunks[].url` at the `.bin.gz` file, and deletes the raw `.bin`. There is no uncompressed fallback in the viewer: a browser without `DecompressionStream` is shown an error instead. Simplification uses a 0.2% relative error limit per structure.
 
 ## Deploy
 

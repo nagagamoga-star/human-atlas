@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import {MeshoptSimplifier} from 'meshoptimizer';
+// Intermediate chunks are uncompressed .bin files. scripts/compress-models.mjs publishes gzip and deletes them.
 await MeshoptSimplifier.ready;
 const name=process.argv[2]??'atlas.json',prefix=name.includes('female')?'female':'body';
 const dir=new URL('../public/models/',import.meta.url),manifest=JSON.parse(fs.readFileSync(new URL(name,dir),'utf8'));
