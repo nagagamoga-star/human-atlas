@@ -28,12 +28,15 @@ Open http://localhost:3016. To build the static site, run `npm run build`; the o
 
 ```sh
 npm run check
-node scripts/validate-atlas.mjs
-node scripts/validate-interactions.mjs
+npm run lint
+npm test
 npm run build
+npm run budget
 ```
 
-Validation covers mesh buffers, names and concept membership, nonoverlapping exploded layouts at desktop and mobile aspect ratios, search and inspection contracts, and tap-versus-drag handling. Browser interaction checks have exercised selection, system controls, search, isolation, rotation, and 390×844, 320×568, and 844×390 layouts. Phone controls stay clear of the exploded inventory, and isolated structures fit the space above or beside the detail panel. Physical-device performance and real multitouch hardware have not been tested.
+`npm test` runs the atlas and interaction validators. Expected part and concept counts come from the manifest (`partCount`, `conceptCount`), not from numbers baked into the script. Validation covers mesh buffers, names and concept membership, nonoverlapping exploded layouts at desktop and mobile aspect ratios, search and inspection contracts, and tap-versus-drag handling. Browser interaction checks have exercised selection, system controls, search, isolation, rotation, and 390×844, 320×568, and 844×390 layouts. Phone controls stay clear of the exploded inventory, and isolated structures fit the space above or beside the detail panel. Physical-device performance and real multitouch hardware have not been tested.
+
+GitHub Actions runs that sequence on every push and pull request. `npm run budget` then fails the job if the gzipped model payload or the gzipped main JS bundle exceeds the ceilings in `scripts/check-payload.mjs`, and it writes the sizes to the job summary. `npm run fmt` / `npm run fmt:check` invoke oxfmt; they are not part of CI, because formatting would restyle the studio sources and the one-line anatomy manifest.
 
 ## Anatomy data
 

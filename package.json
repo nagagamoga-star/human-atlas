@@ -9,7 +9,12 @@
     "dev": "vite --host 0.0.0.0 --port 3016",
     "build": "vite build",
     "build:vercel": "vite build",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "node scripts/validate-atlas.mjs && node --experimental-strip-types scripts/validate-interactions.mjs",
+    "lint": "oxlint --deny-warnings",
+    "fmt": "oxfmt",
+    "fmt:check": "oxfmt --check",
+    "budget": "node scripts/check-payload.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

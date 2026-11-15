@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {gunzipSync} from 'node:zlib';
 const filename=process.argv[2]??'atlas.json';
 const base=new URL('../public/models/',import.meta.url),atlas=JSON.parse(fs.readFileSync(new URL(filename,base)));
-assert.equal(atlas.parts.length,2234);assert.equal(atlas.concepts.length,3432);
-const ids=new Set(atlas.parts.map(p=>p.id));assert.equal(ids.size,2234);
+assert.equal(typeof atlas.partCount,'number','manifest is missing partCount');assert.equal(typeof atlas.conceptCount,'number','manifest is missing conceptCount');
+assert.equal(atlas.parts.length,atlas.partCount);assert.equal(atlas.concepts.length,atlas.conceptCount);
+const ids=new Set(atlas.parts.map(p=>p.id));assert.equal(ids.size,atlas.partCount);
 const files=atlas.chunks.map(c=>{const name=c.url.split('/').pop();assert.ok(name.endsWith('.gz'),`${name} must be gzip`);const file=fs.readFileSync(new URL(name,base));assert.equal(file[0],0x1f);assert.equal(file[1],0x8b);if(c.gzipBytes!=null)assert.equal(file.length,c.gzipBytes);const b=gunzipSync(file);assert.equal(b.length,c.bytes);return b;});
 let tris=0;
 for(const p of atlas.parts){assert.ok(p.name.trim()&&p.name!=='-'&&!p.name.includes('Bounds('));assert.ok(p.conceptId!=='-');assert.ok(p.system);const b=files[p.chunk];assert.ok(p.indices+p.indexCount*4<=b.length);const pos=new Float32Array(b.buffer,b.byteOffset+p.positions,p.vertexCount*3),indices=new Uint32Array(b.buffer,b.byteOffset+p.indices,p.indexCount);assert.ok(indices.length>=3);for(const i of indices)assert.ok(i<p.vertexCount,`${p.id}: invalid vertex`);for(const value of pos)assert.ok(Number.isFinite(value));tris+=p.indexCount/3;}
